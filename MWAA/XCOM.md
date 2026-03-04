@@ -10,61 +10,61 @@ When executed, it returns a JobRunId, which is automatically stored in XCom.
 
 You can use this JobRunId to query Glue for job status or custom metadata.
 
-from airflow.providers.amazon.aws.operators.glue import GlueJobOperator
+    from airflow.providers.amazon.aws.operators.glue import GlueJobOperator
 
-glue_task = GlueJobOperator(
-    task_id="run_glue_job",
-    job_name="my_glue_job",
-    script_location="s3://my-bucket/scripts/my_script.py",
-    region_name="us-east-1",
-    iam_role_name="my-glue-role",
-    dag=dag
-)
+    glue_task = GlueJobOperator(
+        task_id="run_glue_job",
+        job_name="my_glue_job",
+        script_location="s3://my-bucket/scripts/my_script.py",
+        region_name="us-east-1",
+        iam_role_name="my-glue-role",
+        dag=dag
+    )
 
 ⚙️ Checking Glue Job Status
 
 Use a PythonOperator with boto3 to query Glue for the job’s final state and push a flag into XCom.
 
-import boto3
-from airflow.operators.python import PythonOperator
+    import boto3
+    from airflow.operators.python import PythonOperator
 
-def check_glue_status(**kwargs):
-    job_run_id = kwargs['ti'].xcom_pull(task_ids='run_glue_job')
-    glue = boto3.client('glue', region_name='us-east-1')
+    def check_glue_status(**kwargs):
+        job_run_id = kwargs['ti'].xcom_pull(task_ids='run_glue_job')
+        glue = boto3.client('glue', region_name='us-east-1')
 
-    response = glue.get_job_run(JobName='my_glue_job', RunId=job_run_id)
-    state = response['JobRun']['JobRunState']
+        response = glue.get_job_run(JobName='my_glue_job', RunId=job_run_id)
+        state = response['JobRun']['JobRunState']
 
-    # Example: push a flag if file exists logic is inside Glue
-    file_exists = (state == 'SUCCEEDED')
-    kwargs['ti'].xcom_push(key='file_presence', value=file_exists)
+        # Example: push a flag if file exists logic is inside Glue
+        file_exists = (state == 'SUCCEEDED')
+        kwargs['ti'].xcom_push(key='file_presence', value=file_exists)
 
-check_task = PythonOperator(
-    task_id='check_glue_status',
-    python_callable=check_glue_status,
-    provide_context=True,
-    dag=dag
-)
+    check_task = PythonOperator(
+        task_id='check_glue_status',
+        python_callable=check_glue_status,
+        provide_context=True,
+        dag=dag
+    )
 
 📡 Using XCom Flag in SSHOperator
 
 The downstream SSHOperator can pull the flag and conditionally execute commands.
 
-from airflow.providers.ssh.operators.ssh import SSHOperator
+    from airflow.providers.ssh.operators.ssh import SSHOperator
 
-ssh_task = SSHOperator(
-    task_id='ssh_task',
-    ssh_conn_id='my_ssh_connection',
-    command="""
-    {% if ti.xcom_pull(task_ids='check_glue_status', key='file_presence') %}
-        echo "File exists, running command..."
+    ssh_task = SSHOperator(
+        task_id='ssh_task',
+        ssh_conn_id='my_ssh_connection',
+        command="""
+        {% if ti.xcom_pull(task_ids='check_glue_status', key='file_presence') %}
+            echo "File exists, running command..."
         # your command here
-    {% else %}
-        echo "File not found, skipping..."
-    {% endif %}
-    """,
-    dag=dag
-)
+        {% else %}
+            echo "File not found, skipping..."
+        {% endif %}
+        """,
+        dag=dag
+    )
 
 🔑 Key Points
 
