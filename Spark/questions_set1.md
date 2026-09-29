@@ -27,7 +27,7 @@ In modern Spark, it's created automatically inside a SparkSession (`spark.sparkC
 ## 3. Explain Spark Architecture
 
 ### Components of Spark Architecture
-
+spark fallows master and slave architecture. master is the driver/master node manages the spark execution by scheduling tasks and coordinates the workers.
 - **Driver Program**
   - The main process that runs the Spark application.
   - Converts user code (in Python, Scala, Java, etc.) into a DAG (Directed Acyclic Graph) of stages.
