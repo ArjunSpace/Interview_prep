@@ -69,7 +69,9 @@ spark fallows master and slave architecture. master is the driver/master node ma
 - The driver monitors execution and re-runs failed tasks if needed.
 
 ## 4. What is the difference between RDDs, DataFrame and Dataset?
+Abstraction Level: Low-level gives you procedural control over every step (harder, more manual); high-level lets you declare what you want, leaving optimization to Spark.
 
+Type Safety: Type-safe code catches type errors and missing columns at compile-time rather than crashing hours into a production job at runtime.
 | Feature | RDD (Resilient Distributed Dataset) | DataFrame | Dataset |
 |---------|-------------------------------------|-----------|---------|
 | Abstraction Level | Low-level | High-level | High-level |
